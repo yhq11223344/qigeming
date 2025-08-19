@@ -1,54 +1,101 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>七夕烟花秀</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Arial', sans-serif;
-        }
-        canvas {
-            display: block;
-        }
-        .message {
-            position: absolute;
-            color: #fff;
-            text-align: center;
-            z-index: 100;
-            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
-            opacity: 0;
-            transition: opacity 2s;
-        }
-        .message h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #ff69b4;
-        }
-        .message p {
-            font-size: 1.5em;
-            color: #ffb6c1;
-        }
-    </style>
-</head>
-<body>
-    <canvas id="fireworks"></canvas>
-    <div class="message" id="message">
-        <h1>七夕快乐</h1>
-        <p>愿有情人终成眷属</p>
-    </div>
 
-    <script>
-        const canvas = document.getElementById('fireworks');
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>七夕烟花秀</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .message {
+      position: absolute;
+      color: #fff;
+      text-align: center;
+      z-index: 100;
+      text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+      opacity: 0;
+      transition: opacity 2s;
+    }
+
+    .message h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #ff69b4;
+    }
+
+    .message p {
+      font-size: 1.5em;
+      color: #ffb6c1;
+    }
+
+    .music-control {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      outline: none;
+    }
+
+    .music-control:hover {
+      background: rgba(255, 105, 180, 0.7);
+    }
+
+    .music-info {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      max-width: 200px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="fireworks"></canvas>
+  <div class="message" id="message">
+    <h1>七夕快乐</h1>
+    <p>愿有情人终成眷属</p>
+  </div>
+  <button class="music-control" id="musicControl">🎵</button>
+  <div class="music-info" id="musicInfo">棉花糖 - 再见王子</div>
+
+  <script>
+    const canvas = document.getElementById('fireworks');
         const ctx = canvas.getContext('2d');
         const message = document.getElementById('message');
+        const musicControl = document.getElementById('musicControl');
+        const musicInfo = document.getElementById('musicInfo');
         
         // 设置画布大小为窗口大小
         canvas.width = window.innerWidth;
@@ -64,6 +111,71 @@
         setTimeout(() => {
             message.style.opacity = '1';
         }, 2000);
+        
+        // 棉花糖乐团的音乐
+        const songs = [
+        {
+             title: "田馥甄 - 小幸运",
+                url: "https://music.163.com/song/media/outer/url?id=38592976.mp3"
+            },
+        ];
+        
+        // 音乐播放器
+        const bgMusic = new Audio();
+        let currentSongIndex = 0;
+        let isMusicPlaying = false;
+        
+        // 加载音乐
+        function loadSong(index) {
+            currentSongIndex = index % songs.length;
+            bgMusic.src = songs[currentSongIndex].url;
+            musicInfo.textContent = songs[currentSongIndex].title;
+            musicInfo.style.display = 'block';
+            setTimeout(() => {
+                musicInfo.style.display = 'none';
+            }, 3000);
+            
+            bgMusic.load();
+        }
+        
+        // 初始化加载第一首歌
+        loadSong(0);
+        bgMusic.loop = true;
+        
+        // 音乐控制按钮
+        musicControl.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                musicControl.textContent = '🎵';
+            } else {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    musicControl.textContent = '🔊';
+                }).catch(e => {
+                    // 如果播放失败，尝试下一首
+                    loadSong(currentSongIndex + 1);
+                    bgMusic.play();
+                });
+            }
+            isMusicPlaying = !isMusicPlaying;
+        });
+        
+        // 点击页面任意位置尝试播放音乐
+        document.addEventListener('click', function firstInteraction() {
+            if (!isMusicPlaying) {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    musicControl.textContent = '🔊';
+                }).catch(e => {
+                    musicInfo.textContent = '点击按钮播放音乐';
+                    musicInfo.style.display = 'block';
+                    setTimeout(() => {
+                        musicInfo.style.display = 'none';
+                    }, 3000);
+                });
+            }
+            document.removeEventListener('click', firstInteraction);
+        }, { once: true });
         
         // 烟花粒子类
         class Particle {
@@ -320,7 +432,7 @@
             
             fireworks.push(new Firework(x, y, targetX, targetY, color));
         });
-    </script>
+  </script>
 </body>
 
 </html>
